@@ -19,6 +19,7 @@
         <module>api-gateway</module>
         <module>identity-service</module>
         <module>company-service</module>
+        <module>customer-service</module>
         <module>category-service</module>
         <module>coupon-service</module>
     </modules>
