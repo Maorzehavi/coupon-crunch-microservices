@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -35,11 +36,10 @@ public class CompanyController {
 
     @PostMapping
     public ResponseEntity<CompanyResponse> createCompany(@RequestBody CompanyRequest companyRequest) {
-        try {
-            return ResponseEntity.ok(companyService.createCompany(companyRequest).orElseThrow());
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
+       var companyResponse = companyService.createCompany(companyRequest).orElseThrow(
+               () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Company with name " + companyRequest.getName() + " already exists"));
+         return ResponseEntity.created(URI.create("/api/v1/companies/" + companyResponse.getId()))
+                    .body(companyResponse);
     }
 
     @PutMapping("/{id}")
