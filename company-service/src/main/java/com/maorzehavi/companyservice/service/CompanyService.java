@@ -4,6 +4,8 @@ import com.maorzehavi.companyservice.model.dto.request.CompanyRequest;
 import com.maorzehavi.companyservice.model.dto.response.CompanyResponse;
 import com.maorzehavi.companyservice.model.entity.Company;
 import com.maorzehavi.companyservice.repository.CompanyRepository;
+import com.maorzehavi.companyservice.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -17,7 +19,7 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
 
-
+    private final JwtUtil jwtUtil;
     private final RestTemplate restTemplate;
 
     public Optional<CompanyResponse> getCompany(Long id) {
@@ -45,21 +47,24 @@ public class CompanyService {
         return Optional.of(mapToCompanyResponse(company));
     }
 
-    public Optional<CompanyResponse> updateCompany(Long id, CompanyRequest companyRequest) {
+    public Optional<CompanyResponse> updateCompany(Long id, CompanyRequest request, HttpServletRequest httpRequest) {
         var company = companyRepository.findById(id).orElseThrow(() -> new RuntimeException("Company with id " + id + " not found"));
-        if (!company.getEmail().equals(companyRequest.getUser().getEmail()) && companyRepository.existsByEmail(companyRequest.getUser().getEmail())) {
-            throw new RuntimeException("Company with email " + companyRequest.getUser().getEmail() + " already exists");
+        jwtUtil.validateUser(company.getUserId(), httpRequest);
+        var isEmailTaken = restTemplate.getForEntity("http://identity-service/api/v1/users/taken?userId=" + company.getUserId() + "&email=" + request.getUser().getEmail(), Boolean.class);
+        if (Boolean.TRUE.equals(isEmailTaken.getBody()) || !company.getEmail().equals(request.getUser().getEmail()) && companyRepository.existsByEmail(request.getUser().getEmail())) {
+            throw new RuntimeException("User with email " + request.getUser().getEmail() + " already exists");
         }
-        restTemplate.put("http://identity-service/api/v1/users/" + company.getUserId(), companyRequest.getUser());
-        company.setName(companyRequest.getName());
-        company.setEmail(companyRequest.getUser().getEmail());
-        company.setPhoneNumber(companyRequest.getPhoneNumber());
+        restTemplate.put("http://identity-service/api/v1/users/" + company.getUserId(), request.getUser());
+        company.setName(request.getName());
+        company.setEmail(request.getUser().getEmail());
+        company.setPhoneNumber(request.getPhoneNumber());
         companyRepository.save(company);
         return Optional.of(mapToCompanyResponse(company));
     }
 
-    public Optional<CompanyResponse> deleteCompany(Long id) {
+    public Optional<CompanyResponse> deleteCompany(Long id,HttpServletRequest httpRequest) {
         var company = companyRepository.findById(id).orElseThrow(() -> new RuntimeException("Company with id " + id + " not found"));
+        jwtUtil.validateUser(company.getUserId(), httpRequest);
         restTemplate.delete("http://identity-service/api/v1/users/" + company.getUserId());
         companyRepository.delete(company);
         return Optional.of(mapToCompanyResponse(company));

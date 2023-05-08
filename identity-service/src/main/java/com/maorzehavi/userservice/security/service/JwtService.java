@@ -50,8 +50,9 @@ public class JwtService {
 
     public String generateToken(Map<String, Object> claims, UserDetails userDetails) {
         Instant now = Instant.now();
-        claims.put("authorities", userDetails.getAuthorities());
         claims.put("userId", ((SecurityUser) userDetails).getId());
+        claims.put("clientType", ((SecurityUser) userDetails).getUser().getClientType());
+        claims.put("authorities", userDetails.getAuthorities());
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(userDetails.getUsername())
@@ -64,11 +65,11 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return (username.equals(userDetails.getUsername()) && isTokenExpired(token));
     }
 
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        return !extractExpiration(token).before(new Date());
     }
 
     private Date extractExpiration(String token) {
@@ -82,7 +83,7 @@ public class JwtService {
     }
 
     public Long validateToken(String token) {
-        if (!isTokenExpired(token)&& extractClaim(token, "userId")!=null) {
+        if (isTokenExpired(token) && extractClaim(token, "userId")!=null) {
             return Long.parseLong(extractClaim(token, "userId").toString());
         } else {
             return -1L;

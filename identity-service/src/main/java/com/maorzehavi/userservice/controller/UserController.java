@@ -56,4 +56,9 @@ public class UserController {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with id: " + id)
         ));
     }
+
+    @GetMapping("/taken")
+    public ResponseEntity<Boolean> isEmailTaken(@RequestParam("userId") Long userId,@RequestParam("email") String email) {
+        return ResponseEntity.ok(userService.isEmailTaken(userId,email));
+    }
 }

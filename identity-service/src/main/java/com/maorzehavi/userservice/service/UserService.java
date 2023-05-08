@@ -30,17 +30,15 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Optional<Long> getIdByEmail(String email) {
-        return userRepository.getIdByEmail(email);
-    }
-
-    public Boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
+    public Boolean isEmailTaken(Long userId, String email) {
+        var user = userRepository.findByEmail(email);
+        return user.filter(value -> !value.getId().equals(userId)).isPresent();
     }
 
     public Optional<UserResponse> getByEmail(String email) {
         return userRepository.findByEmail(email).map(this::mapToUserResponse);
     }
+
     public UserResponse getById(Long id) {
         return userRepository.findById(id).map(this::mapToUserResponse).orElseThrow(
                 () -> new SystemException("Not user found with id '" + id + "'")
@@ -48,9 +46,8 @@ public class UserService {
     }
 
     public Optional<UserResponse> createUser(UserRequest userRequest, ClientType clientType) {
-        if (existsByEmail(userRequest.getEmail())) {
+        if (userRepository.existsByEmail(userRequest.getEmail()))
             throw new SystemException("Email: " + userRequest.getEmail() + " is taken");
-        }
         userRequest.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         var roles = roleService.getAllRolesEntityByClientType(clientType);
         if (roles.isPresent() && roles.get().size() > 0) {

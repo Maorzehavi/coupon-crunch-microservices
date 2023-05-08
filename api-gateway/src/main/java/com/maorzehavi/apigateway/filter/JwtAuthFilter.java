@@ -34,9 +34,19 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
             if (parts.length != 2 || !"Bearer".equals(parts[0])) {
                 throw new RuntimeException("Incorrect authorization structure");
             }
-            System.out.println("parts[1] = " + parts[1]);
 
-
+//            return webClientBuilder.build()
+//                    .post()
+//                    .uri("http://identity-service/api/v1/auth/validate")
+//                    .body(Mono.just(parts[1]), String.class)
+//                    .retrieve().bodyToMono(Long.class)
+//                    .map(userId -> {
+//                        exchange.getRequest()
+//                                .mutate()
+//                                .header("X-auth-user-id", userId.toString())
+//                                .build();
+//                        return exchange;
+//                    }).flatMap(chain::filter);
             return webClientBuilder.build()
                     .post()
                     .uri("http://identity-service/api/v1/auth/validate")

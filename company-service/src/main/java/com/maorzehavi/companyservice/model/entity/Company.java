@@ -25,6 +25,6 @@ public class Company {
 
     private Boolean isActive;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(nullable = false,unique = true)
     private Long userId;
 }

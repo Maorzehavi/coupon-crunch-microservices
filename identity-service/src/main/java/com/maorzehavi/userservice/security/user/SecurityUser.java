@@ -4,6 +4,7 @@ package com.maorzehavi.userservice.security.user;
 import com.maorzehavi.userservice.model.entity.Role;
 import com.maorzehavi.userservice.model.entity.User;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class SecurityUser implements UserDetails {
-
+    @Getter
     private final User user;
 
     public Long getId() {

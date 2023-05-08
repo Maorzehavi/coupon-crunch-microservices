@@ -3,6 +3,7 @@ package com.maorzehavi.companyservice.controller;
 import com.maorzehavi.companyservice.model.dto.request.CompanyRequest;
 import com.maorzehavi.companyservice.model.dto.response.CompanyResponse;
 import com.maorzehavi.companyservice.service.CompanyService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,18 +44,19 @@ public class CompanyController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CompanyResponse> updateCompany(@PathVariable Long id, @RequestBody CompanyRequest companyRequest) {
+    public ResponseEntity<CompanyResponse> updateCompany(@PathVariable Long id, @RequestBody CompanyRequest companyRequest,
+                                                         HttpServletRequest httpRequest) {
         try {
-            return ResponseEntity.ok(companyService.updateCompany(id, companyRequest).orElseThrow());
+            return ResponseEntity.ok(companyService.updateCompany(id, companyRequest,httpRequest).orElseThrow());
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CompanyResponse> deleteCompany(@PathVariable Long id) {
+    public ResponseEntity<CompanyResponse> deleteCompany(@PathVariable Long id, HttpServletRequest httpRequest) {
         try {
-            return ResponseEntity.ok(companyService.deleteCompany(id).orElseThrow());
+            return ResponseEntity.ok(companyService.deleteCompany(id,httpRequest).orElseThrow());
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
