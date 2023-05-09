@@ -80,6 +80,7 @@ public class CustomerService {
         return CustomerResponse.builder()
                 .id(customer.getId())
                 .firstName(customer.getFirstName())
+                .lastName(customer.getLastName())
                 .email(customer.getEmail())
                 .userId(customer.getUserId())
                 .build();

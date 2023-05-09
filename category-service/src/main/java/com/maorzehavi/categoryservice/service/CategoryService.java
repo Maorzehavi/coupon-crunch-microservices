@@ -21,6 +21,10 @@ public class CategoryService {
                 .map(this::mapToResponse);
     }
 
+    public CategoryResponse test(CategoryRequest categoryRequest) {
+        return mapToResponse(categoryRepository.save(mapToEntity(categoryRequest)));
+    }
+
     public Optional<CategoryResponse> createCategory(CategoryRequest categoryRequest) {
         if (categoryRepository.existsByName(categoryRequest.getName())) {
             throw new IllegalArgumentException("Category with name " + categoryRequest.getName() + " already exists");
@@ -39,6 +43,10 @@ public class CategoryService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    public boolean existsById(Long id) {
+        return categoryRepository.existsById(id);
     }
 
 

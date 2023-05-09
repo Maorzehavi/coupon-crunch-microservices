@@ -45,7 +45,6 @@ public class AuthController {
     @PostMapping("/validate/apikey")
     public ResponseEntity<?> validateApiKey(@RequestBody String token){
         try{
-            System.out.println("token: " + token);
             return ResponseEntity.ok(authService.validateApiKey(token));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());

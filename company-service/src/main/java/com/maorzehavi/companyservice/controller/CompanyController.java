@@ -62,5 +62,12 @@ public class CompanyController {
         }
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Long> getCompanyIdByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(companyService.getCompanyIdByUserId(userId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company with user id " + userId + " not found")
+        ));
+    }
+
 
 }

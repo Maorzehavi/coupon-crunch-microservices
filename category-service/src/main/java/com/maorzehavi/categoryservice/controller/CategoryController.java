@@ -33,15 +33,25 @@ public class CategoryController {
 
     @PostMapping
     public ResponseEntity<CategoryResponse> createCategory(@RequestBody CategoryRequest categoryRequest) {
-       var categoryResponse = categoryService.createCategory(categoryRequest)
-               .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
-         return ResponseEntity.created(URI.create("/api/v1/categories/" + categoryResponse.getId()))
-                    .body(categoryResponse);
+        var categoryResponse = categoryService.createCategory(categoryRequest).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category with name " + categoryRequest.getName() + " already exists"));
+        return ResponseEntity.created(URI.create("/api/v1/categories/" + categoryResponse.getId()))
+                .body(categoryResponse);
     }
 
     @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/exists/{id}")
+    public ResponseEntity<Boolean> existsById(@PathVariable Long id) {
+        return ResponseEntity.ok(categoryService.existsById(id));
+    }
+
+    @PostMapping("/test")
+    public ResponseEntity<CategoryResponse> test(@RequestBody CategoryRequest categoryRequest) {
+        return ResponseEntity.ok(categoryService.test(categoryRequest));
     }
 }

@@ -26,8 +26,8 @@ public class CompanyService {
         return companyRepository.findById(id).map(this::mapToCompanyResponse);
     }
 
-    public Optional<Company> getCompanyEntity(Long id) {
-        return companyRepository.findById(id);
+    public Optional<Long> getCompanyIdByUserId(Long userId) {
+        return companyRepository.findIdByUserId(userId);
     }
 
     public Optional<CompanyResponse> createCompany(CompanyRequest companyRequest) {
