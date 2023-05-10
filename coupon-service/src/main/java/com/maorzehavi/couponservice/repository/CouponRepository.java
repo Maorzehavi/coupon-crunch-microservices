@@ -34,6 +34,8 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
     @Transactional
     Boolean existsByTitleAndCompanyId(String title, Long companyId);
 
+    Boolean existsByCategoryId(Long categoryId);
+
     @Query("select c from Coupon c where c.endDate < ?1")
     Optional<List<Coupon>> findAllByEndDateBefore(LocalDate localDate);
 }

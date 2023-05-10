@@ -37,6 +37,10 @@ public class CouponService {
         if (existsForCompany(couponRequest.getTitle(), companyId)) {
             throw new RuntimeException("Coupon with title " + couponRequest.getTitle() + " already exists");
         }
+        boolean categoryExists = Boolean.TRUE.equals(restTemplate.getForObject("http://category-service/api/v1/categories/exists/" + couponRequest.getCategoryId(), Boolean.class));
+        if (!categoryExists) {
+            throw new RuntimeException("Category with id " + couponRequest.getCategoryId() + " not found");
+        }
         Coupon coupon = mapToEntity(couponRequest);
         coupon.setCompanyId(companyId);
         couponRepository.save(coupon);
@@ -98,6 +102,10 @@ public class CouponService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    public boolean existsByCategoryId(Long categoryId){
+        return couponRepository.existsByCategoryId(categoryId);
     }
 
     private boolean existsForCompany(String couponTitle, Long companyId){
