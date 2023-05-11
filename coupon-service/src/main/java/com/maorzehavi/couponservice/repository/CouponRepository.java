@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,4 +37,6 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
 
     @Query("select c from Coupon c where c.endDate < ?1")
     Optional<List<Coupon>> findAllByEndDateBefore(LocalDate localDate);
+
+
 }

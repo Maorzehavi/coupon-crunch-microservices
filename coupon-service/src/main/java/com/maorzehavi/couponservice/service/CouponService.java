@@ -6,7 +6,9 @@ import com.maorzehavi.couponservice.model.entity.Coupon;
 import com.maorzehavi.couponservice.repository.CouponRepository;
 import com.maorzehavi.couponservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -112,6 +114,33 @@ public class CouponService {
                 .toList();
     }
 
+    public List<CouponResponse> findAllIfExist(Long... ids) {
+        List<Coupon> coupons = couponRepository.findAllById(List.of(ids));
+        return coupons.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Modifying
+    @Transactional
+    public void changeAmount(Long couponId, Integer amount) {
+        Coupon coupon = couponRepository.findById(couponId).orElseThrow(() -> new RuntimeException("Coupon with id " + couponId + " not found"));
+        coupon.setAmount(coupon.getAmount() + amount);
+        couponRepository.save(coupon);
+    }
+
+    @Modifying
+    @Transactional
+    public boolean buyCoupon(Long couponId) {
+        Coupon coupon = couponRepository.findById(couponId).orElse(null);
+        if (coupon == null || coupon.getAmount() == 0) {
+            return false;
+        }
+        coupon.setAmount(coupon.getAmount() - 1);
+        couponRepository.save(coupon);
+        return true;
+    }
+
     public boolean existsByCategoryId(Long categoryId) {
         return couponRepository.existsByCategoryId(categoryId);
     }
@@ -146,8 +175,19 @@ public class CouponService {
                 .amount(request.getAmount())
                 .price(request.getPrice())
                 .image(request.getImage())
+                .categoryId(request.getCategoryId())
                 .build();
     }
 
 
+    public double getTotalPrice(List<Long> idsList) {
+        double totalPrice = 0;
+        for (Long id : idsList) {
+            Coupon coupon = couponRepository.findById(id).orElse(null);
+            if(coupon != null){
+                totalPrice += coupon.getPrice();
+            }
+        }
+        return totalPrice;
+    }
 }
