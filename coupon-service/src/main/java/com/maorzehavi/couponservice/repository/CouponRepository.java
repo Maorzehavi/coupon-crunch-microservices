@@ -31,8 +31,6 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
     @Query("select c.id from Coupon c where c.title = :title and c.companyId = :companyId")
     Optional<Long> getIdByTitleAndCompanyId(String title, Long companyId);
 
-    @Transactional
-    Boolean existsByTitleAndCompanyId(String title, Long companyId);
 
     Boolean existsByCategoryId(Long categoryId);
 

@@ -58,5 +58,11 @@ public class CustomerController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete customer"));
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Long> getCustomerIdByUserId(@PathVariable Long userId) {
+        return customerService.getCustomerIdByUserId(userId).map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer with user id " + userId + " not found"));
+    }
+
 
 }

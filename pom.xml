@@ -22,6 +22,7 @@
         <module>customer-service</module>
         <module>category-service</module>
         <module>coupon-service</module>
+        <module>purchase-service</module>
     </modules>
     <properties>
         <java.version>17</java.version>

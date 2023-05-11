@@ -68,6 +68,10 @@ public class CustomerService {
         return Optional.of(mapToCustomerResponse(customer));
     }
 
+    public Optional<Long> getCustomerIdByUserId(Long userId) {
+        return customerRepository.findIdByUserId(userId);
+    }
+
     private Customer mapToCustomer(CustomerRequest customerRequest) {
         return Customer.builder()
                 .firstName(customerRequest.getFirstName())

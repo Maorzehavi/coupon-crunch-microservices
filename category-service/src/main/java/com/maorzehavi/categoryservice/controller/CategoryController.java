@@ -48,7 +48,7 @@ public class CategoryController {
         }
     }
     @GetMapping("/exists/{id}")
-    public boolean existsById(Long id) {
+    public boolean existsById(@PathVariable Long id) {
         return categoryService.existsById(id);
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -23,19 +24,19 @@ public class CouponService {
     private final RestTemplate restTemplate;
     private final JwtUtil jwtUtil;
 
-    public Optional<CouponResponse> findById(Long id){
+    public Optional<CouponResponse> findById(Long id) {
         return couponRepository.findById(id)
                 .map(this::mapToResponse);
     }
 
-    public Optional<CouponResponse> createCoupon(CouponRequest couponRequest, HttpServletRequest httpServletRequest){
+    public Optional<CouponResponse> createCoupon(CouponRequest couponRequest, HttpServletRequest httpServletRequest) {
         Long userId = jwtUtil.extractUserId(httpServletRequest);
-        Long companyId = restTemplate.getForObject("http://company-service/api/companies/user/" + userId, Long.class);
+        Long companyId = restTemplate.getForObject("http://company-service/api/v1/companies/user/" + userId, Long.class);
         if (companyId == null) {
             throw new RuntimeException("Company not found");
         }
-        if (existsForCompany(couponRequest.getTitle(), companyId)) {
-            throw new RuntimeException("Coupon with title " + couponRequest.getTitle() + " already exists");
+        if (getIdByTitleAndCompanyId(couponRequest.getTitle(), companyId) != -1L) {
+            throw new RuntimeException("Coupon with title " + couponRequest.getTitle() + " already exists for company with id " + companyId);
         }
         boolean categoryExists = Boolean.TRUE.equals(restTemplate.getForObject("http://category-service/api/v1/categories/exists/" + couponRequest.getCategoryId(), Boolean.class));
         if (!categoryExists) {
@@ -47,9 +48,9 @@ public class CouponService {
         return Optional.of(mapToResponse(coupon));
     }
 
-    public Optional<CouponResponse> updateCoupon(Long id, CouponRequest couponRequest, HttpServletRequest httpServletRequest){
+    public Optional<CouponResponse> updateCoupon(Long id, CouponRequest couponRequest, HttpServletRequest httpServletRequest) {
         Long userId = jwtUtil.extractUserId(httpServletRequest);
-        Long companyId = restTemplate.getForObject("http://company-service/api/companies/user/" + userId, Long.class);
+        Long companyId = restTemplate.getForObject("http://company-service/api/v1/companies/user/" + userId, Long.class);
         if (companyId == null) {
             throw new RuntimeException("Company not found");
         }
@@ -57,8 +58,8 @@ public class CouponService {
         if (!coupon.getCompanyId().equals(companyId)) {
             throw new RuntimeException("Coupon with id " + id + " not found");
         }
-        if (existsForCompany(couponRequest.getTitle(), companyId)) {
-            throw new RuntimeException("Coupon with title " + couponRequest.getTitle() + " already exists");
+        if (!Objects.equals(getIdByTitleAndCompanyId(couponRequest.getTitle(), companyId), coupon.getId())) {
+            throw new RuntimeException("Coupon with title " + couponRequest.getTitle() + " already exists for company with id " + companyId);
         }
         coupon.setTitle(couponRequest.getTitle());
         coupon.setDescription(couponRequest.getDescription());
@@ -71,49 +72,59 @@ public class CouponService {
         return Optional.of(mapToResponse(coupon));
     }
 
-    public void deleteCoupon(Long id, HttpServletRequest httpServletRequest){
-        Long userId = jwtUtil.extractUserId(httpServletRequest);
-        Long companyId = restTemplate.getForObject("http://company-service/api/companies/user/" + userId, Long.class);
-        if (companyId == null) {
-            throw new RuntimeException("Company not found");
+    public boolean deleteCoupon(Long id, HttpServletRequest httpServletRequest) {
+        try {
+            Long userId = jwtUtil.extractUserId(httpServletRequest);
+            Long companyId = restTemplate.getForObject("http://company-service/api/v1/companies/user/" + userId, Long.class);
+            if (companyId == null) {
+                throw new RuntimeException("Company not found");
+            }
+            var coupon = couponRepository.findById(id).orElseThrow(() -> new RuntimeException("Coupon with id " + id + " not found"));
+            if (!coupon.getCompanyId().equals(companyId)) {
+                throw new RuntimeException("Coupon with id " + id + " not found");
+            }
+            couponRepository.deleteById(id);
+            return true;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return false;
         }
-        var coupon = couponRepository.findById(id).orElseThrow(() -> new RuntimeException("Coupon with id " + id + " not found"));
-        if (!coupon.getCompanyId().equals(companyId)) {
-            throw new RuntimeException("Coupon with id " + id + " not found");
-        }
-        couponRepository.deleteById(id);
     }
 
-    public List<CouponResponse> findAllByCompanyId(Long companyId){
+    public Optional<List<CouponResponse>> findAllByCompanyId(Long companyId) {
         return couponRepository.findAllByCompanyId(companyId)
-                .orElseThrow(
-                        () -> new RuntimeException("Coupons for company with id " + companyId + " not found")
-                )
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+                .map(coupons -> coupons.stream()
+                        .map(this::mapToResponse)
+                        .toList());
     }
 
-    public List<CouponResponse> findAllByCategoryId(Long categoryId){
+    public Optional<List<CouponResponse>> findAllByCategoryId(Long categoryId) {
         return couponRepository.findAllByCategoryId(categoryId)
-                .orElseThrow(
-                        () -> new RuntimeException("Coupons for category with id " + categoryId + " not found")
-                )
+                .map(coupons -> coupons.stream()
+                        .map(this::mapToResponse)
+                        .toList());
+    }
+
+    public List<CouponResponse> findAll() {
+        return couponRepository.findAll()
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
-    public boolean existsByCategoryId(Long categoryId){
+    public boolean existsByCategoryId(Long categoryId) {
         return couponRepository.existsByCategoryId(categoryId);
     }
 
-    private boolean existsForCompany(String couponTitle, Long companyId){
-        return couponRepository.existsByTitleAndCompanyId(couponTitle, companyId);
+    private Long getIdByTitleAndCompanyId(String couponTitle, Long companyId) {
+        if (couponRepository.getIdByTitleAndCompanyId(couponTitle, companyId).isPresent()) {
+            return couponRepository.getIdByTitleAndCompanyId(couponTitle, companyId).get();
+        }
+        return -1L;
     }
 
 
-    private CouponResponse mapToResponse(Coupon coupon){
+    private CouponResponse mapToResponse(Coupon coupon) {
         return CouponResponse.builder()
                 .id(coupon.getId())
                 .title(coupon.getTitle())
@@ -126,7 +137,7 @@ public class CouponService {
                 .build();
     }
 
-    private Coupon mapToEntity(CouponRequest request){
+    private Coupon mapToEntity(CouponRequest request) {
         return Coupon.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -137,8 +148,6 @@ public class CouponService {
                 .image(request.getImage())
                 .build();
     }
-
-
 
 
 }
