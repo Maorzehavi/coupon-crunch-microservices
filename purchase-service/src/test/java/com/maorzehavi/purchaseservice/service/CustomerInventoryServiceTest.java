@@ -19,4 +19,9 @@ class CustomerInventoryServiceTest {
     @Test
     void getAllCustomerInventories() {
     }
+
+    @Test
+    void getCustomerInventory() {
+        System.out.println(customerInventoryService.getCustomerInventory(1L));
+    }
 }

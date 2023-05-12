@@ -73,8 +73,11 @@ public class CouponController {
         return couponService.existsByCategoryId(categoryId);
     }
 
-    @GetMapping("/purchase")
+    @PostMapping("/purchase")
     @Transactional
+    /**
+     * returns a list of purchased coupons and the total price of the purchase
+     */
     public ResponseEntity<?> purchaseCoupons(@RequestParam("coupon") Long... coupons) {
         List<Long> idsList = new ArrayList<>(Arrays.asList(coupons));
         idsList.removeIf(id -> !couponService.buyCoupon(id));

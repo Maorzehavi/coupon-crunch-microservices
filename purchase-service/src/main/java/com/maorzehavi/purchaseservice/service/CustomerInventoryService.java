@@ -5,7 +5,6 @@ import com.maorzehavi.purchaseservice.repository.CustomerInventoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -15,10 +14,12 @@ public class CustomerInventoryService {
     private final CustomerInventoryRepository customerInventoryRepository;
 
     public CustomerInventory saveCustomerInventory(Long customerId,Long ... couponIds) {
-        CustomerInventory customerInventory = CustomerInventory.builder()
-                .customerId(customerId)
-                .couponIds(List.of(couponIds))
-                .build();
+        CustomerInventory customerInventory = customerInventoryRepository.findById(customerId).orElse(null);
+        if (customerInventory == null) {
+            customerInventory = CustomerInventory.builder().customerId(customerId).couponIds(List.of(couponIds)).build();
+        } else {
+            customerInventory.getCouponIds().addAll(List.of(couponIds));
+        }
         return customerInventoryRepository.save(customerInventory);
     }
 

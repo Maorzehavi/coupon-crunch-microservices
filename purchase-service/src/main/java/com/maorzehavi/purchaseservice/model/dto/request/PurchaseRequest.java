@@ -11,5 +11,5 @@ public class PurchaseRequest {
 
     private Long customerId;
 
-    private List<Long> couponIds;
+    private Long[] couponIds;
 }
